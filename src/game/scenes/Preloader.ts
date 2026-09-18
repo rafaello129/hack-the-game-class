@@ -9,38 +9,45 @@ export class Preloader extends Scene
 
     init ()
     {
-        //  We loaded this image in our Boot Scene, so we can display it here
-        this.add.image(512, 384, 'background');
+        const background = this.add.image(512, 384, 'background');
+        background.setTint(0x1e3a5f);
+        background.setAlpha(0.72);
 
-        //  A simple progress bar. This is the outline of the bar.
-        this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
+        this.add.rectangle(512, 384, 1024, 768, 0x020617, 0.42);
 
-        //  This is the progress bar itself. It will increase in size from the left based on the % of progress.
-        const bar = this.add.rectangle(512-230, 384, 4, 28, 0xffffff);
+        this.add.text(512, 308, 'PREPARANDO LABORATORIO', {
+            fontFamily: 'Arial Black',
+            fontSize: 22,
+            color: '#f8fafc',
+            letterSpacing: 2
+        }).setOrigin(0.5);
 
-        //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
-        this.load.on('progress', (progress: number) => {
+        this.add.text(512, 346, 'Cargando recursos del juego…', {
+            fontFamily: 'Arial',
+            fontSize: 17,
+            color: '#94a3b8'
+        }).setOrigin(0.5);
 
-            //  Update the progress bar (our bar is 464px wide, so 100% = 464px)
-            bar.width = 4 + (460 * progress);
+        this.add.rectangle(512, 404, 430, 14, 0x0f172a, 0.92)
+            .setStrokeStyle(1, 0x64748b, 0.55);
 
+        const bar = this.add.rectangle(299, 404, 4, 10, 0x38bdf8)
+            .setOrigin(0, 0.5);
+
+        this.load.on('progress', (progress: number) =>
+        {
+            bar.width = Math.max(4, 426 * progress);
         });
     }
 
     preload ()
     {
-        //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
-
         this.load.image('logo', 'logo.png');
     }
 
     create ()
     {
-        //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
-        //  For example, you can define global animations here, so we can use them in other scenes.
-
-        //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
         this.scene.start('MainMenu');
     }
 }
