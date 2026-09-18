@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import './style.css';
 import { GameScene } from './game/scenes/GameScene';
 
