@@ -13,9 +13,12 @@ import {
 } from '../config';
 import {
     addCoinPoints,
+    clamp,
+    distanceBetween,
     hasReachedTarget,
     loseLife,
-    normalizeDirection
+    normalizeDirection,
+    randomIntBetween
 } from '../logic';
 import {
     isClientSideAdmin,
@@ -31,7 +34,7 @@ type MovementKeys = {
 };
 
 type Enemy = {
-    shape: GameObjects.Rectangle;
+    shape: GameObjects.Container;
     velocityX: number;
     velocityY: number;
 };
@@ -41,13 +44,16 @@ type Positionable = {
     y: number;
 };
 
+const PLAYFIELD_TOP = 146;
+const PLAYFIELD_BOTTOM = 736;
+
 export class Game extends Scene
 {
-    private player!: GameObjects.Rectangle;
+    private player!: GameObjects.Container;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private wasd!: MovementKeys;
 
-    private coins: GameObjects.Arc[] = [];
+    private coins: GameObjects.Container[] = [];
     private enemies: Enemy[] = [];
 
     private score = 0;
@@ -57,6 +63,7 @@ export class Game extends Scene
 
     private scoreText!: GameObjects.Text;
     private livesText!: GameObjects.Text;
+    private progressFill!: GameObjects.Rectangle;
 
     constructor ()
     {
@@ -67,8 +74,8 @@ export class Game extends Scene
     {
         this.coins = [];
         this.enemies = [];
-        // ⚠️ INTENCIONALMENTE VULNERABLE:
-        // confiamos en datos que el usuario controla desde el navegador.
+        // ⚠️ VULNERABILIDAD INTENCIONAL:
+        // puntuación y vidas se aceptan desde un almacenamiento controlado por el usuario.
         const clientProgress = loadClientProgress();
 
         this.score = clientProgress.score;
@@ -76,12 +83,7 @@ export class Game extends Scene
         this.gameEnded = false;
         this.canTakeDamage = true;
 
-        const background = this.add.image(512, 384, 'background');
-        background.setAlpha(0.32);
-
-        this.add.rectangle(512, 66, 968, 96, 0x020617, 0.72)
-            .setStrokeStyle(1, 0xffffff, 0.18);
-
+        this.createBackdrop();
         this.createHud();
         this.createPlayer();
         this.createControls();
@@ -90,15 +92,16 @@ export class Game extends Scene
 
         if (isClientSideAdmin())
         {
-            this.add.text(512, 112, '⚠ MODO ADMIN DEL CLIENTE ACTIVADO', {
+            this.add.text(512, 128, '⚠ ADMIN CONTROLADO POR EL CLIENTE', {
                 fontFamily: 'Arial Black',
-                fontSize: 17,
-                color: '#fca5a5',
-                stroke: '#000000',
-                strokeThickness: 5,
-                align: 'center'
+                fontSize: 13,
+                color: '#fda4af',
+                backgroundColor: '#4c0519cc',
+                padding: { x: 10, y: 5 }
             }).setOrigin(0.5);
         }
+
+        this.cameras.main.fadeIn(180, 2, 6, 23);
     }
 
     update (_time: number, delta: number)
@@ -114,39 +117,84 @@ export class Game extends Scene
         this.checkEnemyCollisions();
     }
 
+    private createBackdrop ()
+    {
+        const background = this.add.image(512, 384, 'background');
+        background.setTint(0x173b63);
+        background.setAlpha(0.52);
+
+        this.add.rectangle(512, 384, 1024, 768, 0x020617, 0.58);
+
+        this.add.rectangle(
+            512,
+            441,
+            960,
+            590,
+            COLORS.panel,
+            0.68
+        ).setStrokeStyle(1, COLORS.panelBorder, 0.8);
+
+        this.add.text(512, 716, 'VERDE = TÚ   ·   AMARILLO = MONEDA   ·   ROSA = ENEMIGO', {
+            fontFamily: 'Arial',
+            fontSize: 12,
+            color: '#64748b',
+            letterSpacing: 1
+        }).setOrigin(0.5);
+    }
+
     private createHud ()
     {
-        this.add.text(42, 28, 'HACK THE GAME · VULNERABLE', {
+        this.add.rectangle(512, 70, 960, 104, 0x07111f, 0.88)
+            .setStrokeStyle(1, 0x334155, 0.8);
+
+        this.add.text(48, 35, 'HACK THE GAME · VULNERABLE', {
             fontFamily: 'Arial Black',
-            fontSize: 22,
-            color: COLORS.hud,
-            stroke: '#000000',
-            strokeThickness: 5
+            fontSize: 20,
+            color: '#f8fafc'
         });
 
-        this.scoreText = this.add.text(42, 62, '', {
+        this.scoreText = this.add.text(48, 72, '', {
             fontFamily: 'Arial',
-            fontSize: 20,
-            color: COLORS.hud,
-            stroke: '#000000',
-            strokeThickness: 4
+            fontSize: 18,
+            color: '#cbd5e1'
         });
 
-        this.livesText = this.add.text(982, 31, '', {
+        this.add.text(512, 34, 'PROGRESO', {
             fontFamily: 'Arial Black',
-            fontSize: 20,
-            color: COLORS.hud,
-            stroke: '#000000',
-            strokeThickness: 5,
+            fontSize: 12,
+            color: '#7dd3fc',
+            letterSpacing: 1
+        }).setOrigin(0.5);
+
+        this.add.rectangle(512, 72, 324, 12, 0x0f172a, 1)
+            .setStrokeStyle(1, 0x475569, 0.8);
+
+        this.progressFill = this.add.rectangle(
+            352,
+            72,
+            4,
+            8,
+            COLORS.accent,
+            1
+        ).setOrigin(0, 0.5);
+
+        this.add.text(512, 96, `META  ${TARGET_SCORE} PUNTOS`, {
+            fontFamily: 'Arial',
+            fontSize: 13,
+            color: '#94a3b8'
+        }).setOrigin(0.5);
+
+        this.livesText = this.add.text(976, 36, '', {
+            fontFamily: 'Arial Black',
+            fontSize: 18,
+            color: '#f8fafc',
             align: 'right'
         }).setOrigin(1, 0);
 
-        this.add.text(982, 68, 'WASD / FLECHAS', {
+        this.add.text(976, 76, 'WASD / FLECHAS', {
             fontFamily: 'Arial',
-            fontSize: 17,
-            color: COLORS.muted,
-            stroke: '#000000',
-            strokeThickness: 4,
+            fontSize: 13,
+            color: '#94a3b8',
             align: 'right'
         }).setOrigin(1, 0);
 
@@ -155,15 +203,27 @@ export class Game extends Scene
 
     private createPlayer ()
     {
-        this.player = this.add.rectangle(
+        const glow = this.add.circle(0, 0, PLAYER_SIZE * 0.78, COLORS.player, 0.16);
+        const body = this.add.circle(0, 0, PLAYER_SIZE / 2, COLORS.player, 1)
+            .setStrokeStyle(3, 0xffffff, 0.92);
+        const core = this.add.circle(0, 0, 5, 0xffffff, 0.95);
+
+        this.player = this.add.container(
             GAME_WIDTH / 2,
             GAME_HEIGHT / 2,
-            PLAYER_SIZE,
-            PLAYER_SIZE,
-            COLORS.player
+            [glow, body, core]
         );
 
-        this.player.setStrokeStyle(3, 0xffffff, 0.85);
+        this.tweens.add({
+            targets: glow,
+            scaleX: 1.18,
+            scaleY: 1.18,
+            alpha: 0.06,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
     }
 
     private createControls ()
@@ -183,9 +243,13 @@ export class Game extends Scene
     {
         for (let index = 0; index < COIN_COUNT; index += 1)
         {
-            const coin = this.add.circle(0, 0, 12, COLORS.coin);
-            coin.setStrokeStyle(3, 0xffffff, 0.8);
-            this.placeRandomly(coin, 145);
+            const outer = this.add.circle(0, 0, 13, COLORS.coin, 1)
+                .setStrokeStyle(2, 0xffffff, 0.82);
+            const core = this.add.circle(0, 0, 6, COLORS.coinCore, 1);
+            const shine = this.add.circle(-4, -5, 2.5, 0xffffff, 0.85);
+
+            const coin = this.add.container(0, 0, [outer, core, shine]);
+            this.placeRandomly(coin, PLAYFIELD_TOP + 26);
             this.coins.push(coin);
         }
     }
@@ -194,17 +258,29 @@ export class Game extends Scene
     {
         for (let index = 0; index < ENEMY_COUNT; index += 1)
         {
-            const enemy = this.add.rectangle(0, 0, 32, 32, COLORS.enemy);
-            enemy.setStrokeStyle(2, 0xffffff, 0.75);
-            this.placeRandomly(enemy, 165);
+            const glow = this.add.rectangle(0, 0, 40, 40, COLORS.enemy, 0.12);
+            const body = this.add.rectangle(0, 0, 28, 28, COLORS.enemy, 1)
+                .setStrokeStyle(2, 0xffffff, 0.78);
+            const core = this.add.rectangle(0, 0, 8, 8, COLORS.enemyCore, 1);
+
+            const enemy = this.add.container(0, 0, [glow, body, core]);
+            enemy.setAngle(45);
+            this.placeRandomly(enemy, PLAYFIELD_TOP + 40);
 
             const horizontalDirection = Math.random() > 0.5 ? 1 : -1;
             const verticalDirection = Math.random() > 0.5 ? 1 : -1;
 
             this.enemies.push({
                 shape: enemy,
-                velocityX: Phaser.Math.Between(90, 155) * horizontalDirection,
-                velocityY: Phaser.Math.Between(70, 125) * verticalDirection
+                velocityX: randomIntBetween(90, 155) * horizontalDirection,
+                velocityY: randomIntBetween(70, 125) * verticalDirection
+            });
+
+            this.tweens.add({
+                targets: enemy,
+                angle: 405,
+                duration: randomIntBetween(2800, 4200),
+                repeat: -1
             });
         }
     }
@@ -236,22 +312,18 @@ export class Game extends Scene
 
         const direction = normalizeDirection(directionX, directionY);
         const seconds = delta / 1000;
-
-        this.player.x += direction.x * PLAYER_SPEED * seconds;
-        this.player.y += direction.y * PLAYER_SPEED * seconds;
-
         const halfPlayer = PLAYER_SIZE / 2;
 
-        this.player.x = Phaser.Math.Clamp(
-            this.player.x,
-            halfPlayer,
-            GAME_WIDTH - halfPlayer
+        this.player.x = clamp(
+            this.player.x + direction.x * PLAYER_SPEED * seconds,
+            42 + halfPlayer,
+            GAME_WIDTH - 42 - halfPlayer
         );
 
-        this.player.y = Phaser.Math.Clamp(
-            this.player.y,
-            132 + halfPlayer,
-            GAME_HEIGHT - halfPlayer
+        this.player.y = clamp(
+            this.player.y + direction.y * PLAYER_SPEED * seconds,
+            PLAYFIELD_TOP + halfPlayer,
+            PLAYFIELD_BOTTOM - halfPlayer
         );
     }
 
@@ -264,12 +336,15 @@ export class Game extends Scene
             enemy.shape.x += enemy.velocityX * seconds;
             enemy.shape.y += enemy.velocityY * seconds;
 
-            if (enemy.shape.x <= 16 || enemy.shape.x >= GAME_WIDTH - 16)
+            if (enemy.shape.x <= 50 || enemy.shape.x >= GAME_WIDTH - 50)
             {
                 enemy.velocityX *= -1;
             }
 
-            if (enemy.shape.y <= 148 || enemy.shape.y >= GAME_HEIGHT - 16)
+            if (
+                enemy.shape.y <= PLAYFIELD_TOP + 18 ||
+                enemy.shape.y >= PLAYFIELD_BOTTOM - 18
+            )
             {
                 enemy.velocityY *= -1;
             }
@@ -280,26 +355,31 @@ export class Game extends Scene
     {
         for (const coin of this.coins)
         {
-            const distance = Phaser.Math.Distance.Between(
+            const distance = distanceBetween(
                 this.player.x,
                 this.player.y,
                 coin.x,
                 coin.y
             );
 
-            if (distance < PLAYER_SIZE / 2 + 14)
+            if (distance < PLAYER_SIZE / 2 + 15)
             {
-                this.score = addCoinPoints(this.score, COIN_POINTS);
-                this.placeRandomly(coin, 145);
+                const oldX = coin.x;
+                const oldY = coin.y;
 
-                // ⚠️ El usuario puede modificar este valor desde DevTools.
+                this.score = addCoinPoints(this.score, COIN_POINTS);
+
+                // ⚠️ Guardamos un resultado importante como si el navegador fuera confiable.
                 saveClientProgress(this.score, this.lives);
+                this.placeRandomly(coin, PLAYFIELD_TOP + 26);
                 this.updateHud();
+                this.showScorePopup(oldX, oldY);
 
                 this.tweens.add({
                     targets: coin,
-                    scale: 1.45,
-                    duration: 90,
+                    scaleX: 1.45,
+                    scaleY: 1.45,
+                    duration: 80,
                     yoyo: true
                 });
 
@@ -320,26 +400,29 @@ export class Game extends Scene
 
         for (const enemy of this.enemies)
         {
-            const distance = Phaser.Math.Distance.Between(
+            const distance = distanceBetween(
                 this.player.x,
                 this.player.y,
                 enemy.shape.x,
                 enemy.shape.y
             );
 
-            if (distance < PLAYER_SIZE / 2 + 18)
+            if (distance < PLAYER_SIZE / 2 + 20)
             {
                 this.lives = loseLife(this.lives);
 
-                // ⚠️ Las vidas también se guardan como si el cliente fuera confiable.
+                // ⚠️ Las vidas también pueden alterarse desde DevTools.
                 saveClientProgress(this.score, this.lives);
                 this.canTakeDamage = false;
 
-                this.player.setAlpha(0.3);
-                this.player.setPosition(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+                this.cameras.main.shake(110, 0.006);
+                this.cameras.main.flash(100, 190, 18, 60, false);
+
+                this.player.setAlpha(0.25);
+                this.player.setPosition(GAME_WIDTH / 2, 430);
                 this.updateHud();
 
-                this.time.delayedCall(900, () =>
+                this.time.delayedCall(850, () =>
                 {
                     this.canTakeDamage = true;
                     this.player.setAlpha(1);
@@ -355,11 +438,36 @@ export class Game extends Scene
         }
     }
 
+    private showScorePopup (x: number, y: number)
+    {
+        const popup = this.add.text(x, y - 18, `+${COIN_POINTS}`, {
+            fontFamily: 'Arial Black',
+            fontSize: 16,
+            color: '#fde047',
+            stroke: '#07111f',
+            strokeThickness: 3
+        }).setOrigin(0.5);
+
+        this.tweens.add({
+            targets: popup,
+            y: popup.y - 34,
+            alpha: 0,
+            duration: 480,
+            onComplete: () => popup.destroy()
+        });
+    }
+
     private finishGame (won: boolean)
     {
-        this.gameEnded = true;
+        if (this.gameEnded)
+        {
+            return;
+        }
 
-        this.time.delayedCall(180, () =>
+        this.gameEnded = true;
+        this.cameras.main.fadeOut(220, 2, 6, 23);
+
+        this.time.delayedCall(230, () =>
         {
             this.scene.start('GameOver', {
                 won,
@@ -371,13 +479,18 @@ export class Game extends Scene
 
     private updateHud ()
     {
-        this.scoreText.setText(`PUNTOS  ${this.score} / ${TARGET_SCORE}`);
-        this.livesText.setText(`VIDAS  ${'♥'.repeat(Math.max(this.lives, 0))}`);
+        this.scoreText.setText(`PUNTOS  ${this.score}`);
+
+        const hearts = '♥'.repeat(Math.max(this.lives, 0));
+        this.livesText.setText(`VIDAS  ${hearts || '—'}`);
+
+        const progress = Math.min(1, this.score / TARGET_SCORE);
+        this.progressFill.displayWidth = Math.max(4, 320 * progress);
     }
 
     private placeRandomly (object: Positionable, topMargin: number)
     {
-        object.x = Phaser.Math.Between(48, GAME_WIDTH - 48);
-        object.y = Phaser.Math.Between(topMargin, GAME_HEIGHT - 48);
+        object.x = randomIntBetween(62, GAME_WIDTH - 62);
+        object.y = randomIntBetween(topMargin, PLAYFIELD_BOTTOM - 34);
     }
 }
