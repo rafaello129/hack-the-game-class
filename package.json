@@ -1,0 +1,19 @@
+{
+  "name": "hack-the-game-class",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Juego educativo para introducir programación, videojuegos y ciberseguridad.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phaser": "4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.2",
+    "vite": "^6.3.1"
+  }
+}
