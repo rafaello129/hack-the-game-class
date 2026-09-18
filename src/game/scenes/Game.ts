@@ -17,6 +17,11 @@ import {
     loseLife,
     normalizeDirection
 } from '../logic';
+import {
+    isClientSideAdmin,
+    loadClientProgress,
+    saveClientProgress
+} from '../../security/vulnerableClient';
 
 type MovementKeys = {
     W: Phaser.Input.Keyboard.Key;
@@ -62,8 +67,12 @@ export class Game extends Scene
     {
         this.coins = [];
         this.enemies = [];
-        this.score = 0;
-        this.lives = STARTING_LIVES;
+        // ⚠️ INTENCIONALMENTE VULNERABLE:
+        // confiamos en datos que el usuario controla desde el navegador.
+        const clientProgress = loadClientProgress();
+
+        this.score = clientProgress.score;
+        this.lives = clientProgress.lives;
         this.gameEnded = false;
         this.canTakeDamage = true;
 
@@ -78,6 +87,18 @@ export class Game extends Scene
         this.createControls();
         this.createCoins();
         this.createEnemies();
+
+        if (isClientSideAdmin())
+        {
+            this.add.text(512, 112, '⚠ MODO ADMIN DEL CLIENTE ACTIVADO', {
+                fontFamily: 'Arial Black',
+                fontSize: 17,
+                color: '#fca5a5',
+                stroke: '#000000',
+                strokeThickness: 5,
+                align: 'center'
+            }).setOrigin(0.5);
+        }
     }
 
     update (_time: number, delta: number)
@@ -95,7 +116,7 @@ export class Game extends Scene
 
     private createHud ()
     {
-        this.add.text(42, 28, 'HACK THE GAME', {
+        this.add.text(42, 28, 'HACK THE GAME · VULNERABLE', {
             fontFamily: 'Arial Black',
             fontSize: 22,
             color: COLORS.hud,
@@ -270,6 +291,9 @@ export class Game extends Scene
             {
                 this.score = addCoinPoints(this.score, COIN_POINTS);
                 this.placeRandomly(coin, 145);
+
+                // ⚠️ El usuario puede modificar este valor desde DevTools.
+                saveClientProgress(this.score, this.lives);
                 this.updateHud();
 
                 this.tweens.add({
@@ -306,6 +330,9 @@ export class Game extends Scene
             if (distance < PLAYER_SIZE / 2 + 18)
             {
                 this.lives = loseLife(this.lives);
+
+                // ⚠️ Las vidas también se guardan como si el cliente fuera confiable.
+                saveClientProgress(this.score, this.lives);
                 this.canTakeDamage = false;
 
                 this.player.setAlpha(0.3);
