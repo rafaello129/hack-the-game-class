@@ -1,0 +1,36 @@
+name: Import Phaser template assets
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/import-phaser-assets.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  import-assets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Clone official Phaser template
+        run: git clone --depth 1 https://github.com/phaserjs/template-vite-ts.git /tmp/phaser-template
+
+      - name: Copy template assets
+        run: |
+          mkdir -p public/assets
+          cp /tmp/phaser-template/public/assets/bg.png public/assets/bg.png
+          cp /tmp/phaser-template/public/assets/logo.png public/assets/logo.png
+          cp /tmp/phaser-template/public/favicon.png public/favicon.png
+
+      - name: Commit imported assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/assets/bg.png public/assets/logo.png public/favicon.png
+          git commit -m "assets: import official Phaser template artwork"
+          git push
