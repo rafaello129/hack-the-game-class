@@ -5,25 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Hack The Game: proyecto educativo para aprender programación y ciberseguridad."
+      content="Hack The Game: proyecto educativo para aprender programación, videojuegos, Git/GitHub y fundamentos de ciberseguridad."
     />
     <title>Hack The Game</title>
   </head>
   <body>
     <main class="page-shell">
-      <section class="intro">
-        <p class="eyebrow">CLASE INTERACTIVA</p>
-        <h1>Hack The Game</h1>
-        <p>
-          Muévete con WASD o las flechas, recoge monedas y evita los enemigos.
-        </p>
+      <header class="hero">
+        <div>
+          <p class="eyebrow">CLASE INTERACTIVA · 2 HORAS</p>
+          <h1>Hack The Game</h1>
+          <p class="lead">
+            Juega primero. Después abre el código, cambia las reglas y descubre
+            por qué el navegador nunca debe ser la única autoridad.
+          </p>
+        </div>
+
+        <a
+          class="repo-link"
+          href="https://github.com/rafaello129/hack-the-game-class"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Ver repositorio ↗
+        </a>
+      </header>
+
+      <section class="learning-path" aria-label="Ruta de aprendizaje">
+        <article>
+          <span>01</span>
+          <strong>Juega</strong>
+          <small>Entiende el producto antes del código.</small>
+        </article>
+        <article>
+          <span>02</span>
+          <strong>Modifica</strong>
+          <small>Cambia velocidad, puntos, vidas y colores.</small>
+        </article>
+        <article>
+          <span>03</span>
+          <strong>Hackea</strong>
+          <small>Investiga la versión vulnerable con DevTools.</small>
+        </article>
+        <article>
+          <span>04</span>
+          <strong>Protege</strong>
+          <small>Identifica qué debería validar un backend.</small>
+        </article>
       </section>
 
-      <div id="game-container" aria-label="Videojuego Hack The Game"></div>
+      <section class="game-card">
+        <div class="game-toolbar">
+          <div class="legend" aria-label="Leyenda">
+            <span><i class="dot player-dot"></i>Jugador</span>
+            <span><i class="dot coin-dot"></i>Moneda</span>
+            <span><i class="dot enemy-dot"></i>Enemigo</span>
+          </div>
+          <span class="controls">WASD / Flechas</span>
+        </div>
 
-      <p class="hint">
-        Consejo: durante la clase vamos a modificar el código que controla este juego.
-      </p>
+        <div id="game-container" aria-label="Videojuego Hack The Game"></div>
+      </section>
+
+      <section class="after-game">
+        <div>
+          <p class="eyebrow">SIGUIENTE PASO</p>
+          <h2>No te quedes solo jugando.</h2>
+          <p>
+            En la clase abriremos este mismo proyecto en VS Code para descubrir
+            qué archivo controla cada comportamiento.
+          </p>
+        </div>
+        <code>src/game/config.ts</code>
+      </section>
     </main>
 
     <script type="module" src="/src/main.ts"></script>
