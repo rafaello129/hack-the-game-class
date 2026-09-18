@@ -19,7 +19,12 @@ export const ENEMY_COUNT = 4;
 export const COLORS = {
     player: 0x4ade80,
     coin: 0xfacc15,
+    coinCore: 0xf59e0b,
     enemy: 0xfb7185,
-    hud: '#ffffff',
-    muted: '#cbd5e1'
+    enemyCore: 0xbe123c,
+    panel: 0x07111f,
+    panelBorder: 0x334155,
+    accent: 0x38bdf8,
+    hud: '#f8fafc',
+    muted: '#94a3b8'
 };
