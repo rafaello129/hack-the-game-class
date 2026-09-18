@@ -1,30 +1,24 @@
 {
-  "name": "template-vite-ts",
-  "description": "A Phaser 3 TypeScript template using Vite.",
-  "version": "1.4.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/phaserjs/template-vite-ts.git"
-  },
-  "author": "Phaser Studio <support@phaser.io> (https://phaser.io/)",
-  "license": "MIT",
-  "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
-  "bugs": {
-    "url": "https://github.com/phaserjs/template-vite-ts/issues"
-  },
-  "homepage": "https://github.com/phaserjs/template-vite-ts#readme",
+  "name": "hack-the-game-class",
+  "description": "Proyecto educativo basado en el template oficial de Phaser para enseñar programación, videojuegos y ciberseguridad.",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "node log.js dev & vite --config vite/config.dev.mjs",
-    "build": "node log.js build & vite build --config vite/config.prod.mjs",
-    "dev-nolog": "vite --config vite/config.dev.mjs",
-    "build-nolog": "vite build --config vite/config.prod.mjs"
-  },
-  "devDependencies": {
-    "typescript": "~5.7.2",
-    "vite": "^6.3.1"
+    "dev": "vite --config vite/config.dev.mjs",
+    "build": "tsc --noEmit && vite build --config vite/config.prod.mjs",
+    "preview": "vite preview --config vite/config.prod.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run test && npm run build"
   },
   "dependencies": {
-    "phaser": "4.0.0",
-    "terser": "^5.39.0"
+    "phaser": "4.0.0"
+  },
+  "devDependencies": {
+    "terser": "^5.39.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.3.1",
+    "vitest": "^5.0.1"
   }
 }
