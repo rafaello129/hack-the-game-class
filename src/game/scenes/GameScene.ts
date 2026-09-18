@@ -11,6 +11,12 @@ import {
   STARTING_LIVES,
   TARGET_SCORE
 } from '../config';
+import {
+  addCoinPoints,
+  hasReachedTarget,
+  loseLife,
+  normalizeDirection
+} from '../logic';
 
 type MovementKeys = {
   W: Phaser.Input.Keyboard.Key;
@@ -190,16 +196,11 @@ export class GameScene extends Phaser.Scene {
       directionY += 1;
     }
 
-    if (directionX !== 0 && directionY !== 0) {
-      const diagonalCorrection = Math.SQRT1_2;
-      directionX *= diagonalCorrection;
-      directionY *= diagonalCorrection;
-    }
-
+    const direction = normalizeDirection(directionX, directionY);
     const seconds = delta / 1000;
 
-    this.player.x += directionX * PLAYER_SPEED * seconds;
-    this.player.y += directionY * PLAYER_SPEED * seconds;
+    this.player.x += direction.x * PLAYER_SPEED * seconds;
+    this.player.y += direction.y * PLAYER_SPEED * seconds;
 
     const halfPlayer = PLAYER_SIZE / 2;
 
@@ -242,11 +243,11 @@ export class GameScene extends Phaser.Scene {
       );
 
       if (distance < PLAYER_SIZE / 2 + 12) {
-        this.score += COIN_POINTS;
+        this.score = addCoinPoints(this.score, COIN_POINTS);
         this.placeRandomly(coin, 70);
         this.updateHud();
 
-        if (this.score >= TARGET_SCORE) {
+        if (hasReachedTarget(this.score, TARGET_SCORE)) {
           this.finishGame('¡GANASTE! 🎉\nPresiona R para reiniciar');
         }
       }
@@ -267,7 +268,7 @@ export class GameScene extends Phaser.Scene {
       );
 
       if (distance < PLAYER_SIZE / 2 + 18) {
-        this.lives -= 1;
+        this.lives = loseLife(this.lives);
         this.canTakeDamage = false;
         this.player.setAlpha(0.35);
         this.player.setPosition(GAME_WIDTH / 2, GAME_HEIGHT / 2);
