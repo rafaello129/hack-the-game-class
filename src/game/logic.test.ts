@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
     addCoinPoints,
+    clamp,
+    distanceBetween,
     hasReachedTarget,
     loseLife,
-    normalizeDirection
+    normalizeDirection,
+    randomIntBetween
 } from './logic';
 
 describe('game rules', () =>
@@ -39,5 +42,29 @@ describe('game rules', () =>
     it('keeps an idle direction at zero', () =>
     {
         expect(normalizeDirection(0, 0)).toEqual({ x: 0, y: 0 });
+    });
+
+    it('clamps values inside a range', () =>
+    {
+        expect(clamp(-5, 0, 10)).toBe(0);
+        expect(clamp(6, 0, 10)).toBe(6);
+        expect(clamp(14, 0, 10)).toBe(10);
+    });
+
+    it('calculates distance between two points', () =>
+    {
+        expect(distanceBetween(0, 0, 3, 4)).toBe(5);
+    });
+
+    it('returns an integer inside the requested random range', () =>
+    {
+        for (let index = 0; index < 30; index += 1)
+        {
+            const value = randomIntBetween(3, 7);
+
+            expect(Number.isInteger(value)).toBe(true);
+            expect(value).toBeGreaterThanOrEqual(3);
+            expect(value).toBeLessThanOrEqual(7);
+        }
     });
 });
