@@ -11,6 +11,11 @@ import {
   STARTING_LIVES,
   TARGET_SCORE
 } from '../config';
+import {
+  isClientSideAdmin,
+  loadClientProgress,
+  saveClientProgress
+} from '../../security/vulnerableClient';
 
 type MovementKeys = {
   W: Phaser.Input.Keyboard.Key;
@@ -52,14 +57,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    // Una escena puede reiniciarse sin crear una instancia nueva.
-    // Por eso restauramos aquí el estado de cada partida.
     this.coins = [];
     this.enemies = [];
-    this.score = 0;
-    this.lives = STARTING_LIVES;
     this.gameEnded = false;
     this.canTakeDamage = true;
+
+    // ⚠️ INTENCIONALMENTE VULNERABLE:
+    // confiamos en datos que vienen de localStorage.
+    const clientProgress = loadClientProgress();
+    this.score = clientProgress.score;
+    this.lives = clientProgress.lives;
 
     this.cameras.main.setBackgroundColor(COLORS.background);
 
@@ -82,6 +89,18 @@ export class GameScene extends Phaser.Scene {
       .setDepth(10)
       .setVisible(false);
 
+    if (isClientSideAdmin()) {
+      this.add
+        .text(GAME_WIDTH / 2, 24, '⚠ MODO ADMIN DEL CLIENTE ACTIVADO', {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '15px',
+          color: '#fca5a5',
+          backgroundColor: '#450a0acc',
+          padding: { x: 12, y: 7 }
+        })
+        .setOrigin(0.5, 0);
+    }
+
     this.updateHud();
   }
 
@@ -97,7 +116,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createHud(): void {
-    this.add.text(24, 18, 'HACK THE GAME', {
+    this.add.text(24, 18, 'HACK THE GAME — VULNERABLE', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '20px',
       color: COLORS.text,
@@ -244,6 +263,9 @@ export class GameScene extends Phaser.Scene {
       if (distance < PLAYER_SIZE / 2 + 12) {
         this.score += COIN_POINTS;
         this.placeRandomly(coin, 70);
+
+        // ⚠️ El navegador puede modificar este valor por su cuenta.
+        saveClientProgress(this.score, this.lives);
         this.updateHud();
 
         if (this.score >= TARGET_SCORE) {
@@ -271,6 +293,9 @@ export class GameScene extends Phaser.Scene {
         this.canTakeDamage = false;
         this.player.setAlpha(0.35);
         this.player.setPosition(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+
+        // ⚠️ También persistimos vidas como dato "confiable" del cliente.
+        saveClientProgress(this.score, this.lives);
         this.updateHud();
 
         this.time.delayedCall(900, () => {
