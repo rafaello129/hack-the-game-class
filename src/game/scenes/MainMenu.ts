@@ -1,4 +1,4 @@
-import { GameObjects, Input, Scene } from 'phaser';
+import { GameObjects, Scene } from 'phaser';
 
 export class MainMenu extends Scene
 {
@@ -71,12 +71,14 @@ export class MainMenu extends Scene
 
         if (keyboard)
         {
-            keyboard.once(Input.Keyboard.Events.ANY_KEY_DOWN, (event: KeyboardEvent) =>
+            keyboard.once('keydown-SPACE', () =>
             {
-                if (event.code === 'Space' || event.code === 'Enter')
-                {
-                    this.scene.start('Game');
-                }
+                this.scene.start('Game');
+            });
+
+            keyboard.once('keydown-ENTER', () =>
+            {
+                this.scene.start('Game');
             });
         }
     }
