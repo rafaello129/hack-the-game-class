@@ -8,6 +8,7 @@ import {
     GAME_WIDTH,
     PLAYER_SIZE,
     PLAYER_SPEED,
+    STARTING_LIVES,
     TARGET_SCORE
 } from '../config';
 import {
