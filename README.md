@@ -1,30 +1,59 @@
 # 🎮 Hack The Game
 
+[![CI](https://github.com/rafaello129/hack-the-game-class/actions/workflows/build.yml/badge.svg)](https://github.com/rafaello129/hack-the-game-class/actions/workflows/build.yml)
+
 Proyecto educativo para una clase introductoria de **programación, desarrollo de videojuegos, Git/GitHub y ciberseguridad**.
 
-La idea no es construir un videojuego completo desde cero. Primero ejecutaremos un proyecto real, entenderemos su estructura, modificaremos su comportamiento y después veremos por qué el código y los datos del lado del cliente pueden ser manipulados.
+La dinámica es intencionalmente simple:
 
-## 🚀 Ejecutar el proyecto
+**jugar → explorar → modificar → romper → proteger → verificar**
+
+## 🌐 Demo web
+
+Cuando GitHub Pages está habilitado para este repositorio, la demo se publica en:
+
+**https://rafaello129.github.io/hack-the-game-class/**
+
+## 🚀 Ejecutar localmente
 
 ```bash
 git clone https://github.com/rafaello129/hack-the-game-class.git
 cd hack-the-game-class
-npm install
+npm ci
 npm run dev
 ```
 
-Vite mostrará una dirección local, normalmente:
-
-```text
-http://localhost:5173
-```
+Vite mostrará la dirección local del proyecto.
 
 ## 🎯 Objetivo del juego
 
 - Muévete con **WASD** o las **flechas**.
 - Recoge monedas.
-- Evita los enemigos.
+- Evita enemigos.
 - Llega a la puntuación objetivo antes de perder todas tus vidas.
+
+## 🌱 Ramas para la clase
+
+### `clase/inicio`
+
+Versión para comenzar. Se usa para:
+
+- explorar la estructura;
+- modificar constantes;
+- relacionar código con comportamiento;
+- conocer Git/GitHub.
+
+### `clase/vulnerable`
+
+Incluye **decisiones inseguras intencionales** para una práctica local con DevTools.
+
+Se utiliza únicamente con fines educativos dentro de este proyecto.
+
+### `clase/seguro`
+
+Sirve para contrastar las decisiones vulnerables y explicar qué datos o permisos deberían validarse fuera del navegador.
+
+> Esta rama no implementa un backend completo; enseña la frontera de confianza cliente/servidor.
 
 ## 🧭 Misiones de programación
 
@@ -33,55 +62,79 @@ http://localhost:5173
 3. Cambia cuántos puntos entrega una moneda.
 4. Cambia el número inicial de vidas.
 5. Cambia la puntuación necesaria para ganar.
-6. Modifica el tamaño o color de algún elemento.
+6. Modifica colores o cantidades de elementos.
 7. Explica qué archivo controla cada parte del juego.
+
+También hay misiones creadas como **Issues de GitHub**.
 
 ## 🗂️ Estructura
 
 ```text
 hack-the-game-class/
+├── .github/
+│   └── workflows/
+│       ├── build.yml
+│       └── pages.yml
+├── docs/
+│   ├── GUIA_PROFESOR.md
+│   └── RETOS_ALUMNOS.md
 ├── src/
 │   ├── game/
 │   │   ├── config.ts
+│   │   ├── config.test.ts
+│   │   ├── logic.ts
+│   │   ├── logic.test.ts
 │   │   └── scenes/
 │   │       └── GameScene.ts
 │   ├── main.ts
 │   └── style.css
 ├── index.html
 ├── package.json
+├── package-lock.json
+├── TESTING.md
 └── tsconfig.json
 ```
 
-### Archivos importantes
+### Archivos clave
 
-- **src/main.ts**: inicia Phaser.
-- **src/game/config.ts**: contiene valores fáciles de modificar durante la clase.
-- **src/game/scenes/GameScene.ts**: contiene las reglas y comportamiento principal del juego.
-- **src/style.css**: apariencia de la página que contiene el juego.
-- **package.json**: dependencias y comandos del proyecto.
+- **`src/game/config.ts`**: valores fáciles de modificar durante la clase.
+- **`src/game/logic.ts`**: reglas pequeñas y comprobables del juego.
+- **`src/game/scenes/GameScene.ts`**: entrada, renderizado, movimiento y comportamiento general.
+- **`src/game/*.test.ts`**: tests automatizados.
+- **`package.json`**: dependencias y comandos.
+- **`docs/GUIA_PROFESOR.md`**: ruta rápida para impartir la sesión.
+- **`docs/RETOS_ALUMNOS.md`**: retos sin dar directamente las respuestas.
 
-## 🌱 Etapas previstas
+## ✅ Tests y build
 
-El repositorio se preparará para trabajar con distintas etapas de la clase:
+Ejecutar tests:
 
-- `clase/inicio`: juego base para explorar y modificar.
-- `clase/vulnerable`: versión con vulnerabilidades didácticas intencionales.
-- `clase/seguro`: versión usada para explicar cómo mejorar esas decisiones.
+```bash
+npm test
+```
 
-> Las vulnerabilidades que se incorporen al proyecto serán exclusivamente educativas y estarán diseñadas para ejecutarse en este entorno local.
+Comprobar tests + build:
+
+```bash
+npm run check
+```
+
+La integración continua valida automáticamente `main` y las ramas `clase/**`.
 
 ## 🧰 Tecnologías
 
 - TypeScript
-- Phaser
+- Phaser 4
 - Vite
+- Vitest
 - Git
-- GitHub
+- GitHub Actions
+- GitHub Pages
 
-## 📚 Propósito
+## 📚 Material docente
 
-Este repositorio está pensado para aprender haciendo:
+- [Guía del profesor](docs/GUIA_PROFESOR.md)
+- [Retos para alumnos](docs/RETOS_ALUMNOS.md)
+- [Cómo funcionan los tests](TESTING.md)
 
-**usar → explorar → modificar → romper → proteger**
-
-No hace falta entender todo el código al comenzar.
+No hace falta entender todo el código al comenzar. El proyecto está diseñado para aprender mediante pequeños experimentos visibles.
