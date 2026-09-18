@@ -25,6 +25,11 @@ type Enemy = {
   velocityY: number;
 };
 
+type Positionable = {
+  x: number;
+  y: number;
+};
+
 export class GameScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Rectangle;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -47,6 +52,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Una escena puede reiniciarse sin crear una instancia nueva.
+    // Por eso restauramos aquí el estado de cada partida.
+    this.coins = [];
+    this.enemies = [];
+    this.score = 0;
+    this.lives = STARTING_LIVES;
+    this.gameEnded = false;
+    this.canTakeDamage = true;
+
     this.cameras.main.setBackgroundColor(COLORS.background);
 
     this.createHud();
@@ -291,10 +305,7 @@ export class GameScene extends Phaser.Scene {
     this.livesText.setText(`Vidas: ${'♥'.repeat(Math.max(this.lives, 0))}`);
   }
 
-  private placeRandomly(
-    object: Phaser.GameObjects.Components.Transform,
-    topMargin: number
-  ): void {
+  private placeRandomly(object: Positionable, topMargin: number): void {
     object.x = Phaser.Math.Between(40, GAME_WIDTH - 40);
     object.y = Phaser.Math.Between(topMargin, GAME_HEIGHT - 40);
   }
