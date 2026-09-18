@@ -62,6 +62,8 @@ export class Game extends Scene
     {
         this.coins = [];
         this.enemies = [];
+        // Estado de la partida local. No se recupera desde datos manipulables
+        // del navegador como si fueran una fuente autoritativa.
         this.score = 0;
         this.lives = STARTING_LIVES;
         this.gameEnded = false;
@@ -95,7 +97,7 @@ export class Game extends Scene
 
     private createHud ()
     {
-        this.add.text(42, 28, 'HACK THE GAME', {
+        this.add.text(42, 28, 'HACK THE GAME · SEGURO', {
             fontFamily: 'Arial Black',
             fontSize: 22,
             color: COLORS.hud,
