@@ -56,8 +56,7 @@ export class GameScene extends Phaser.Scene {
     // Por eso restauramos aquí el estado de cada partida.
     this.coins = [];
     this.enemies = [];
-    this.score = 0;
-    this.lives = STARTING_LIVES;
+    // Este estado solo controla la partida local. En un sistema con premios o\n    // leaderboard, el servidor debería validar el resultado autoritativo.\n    this.score = 0;\n    this.lives = STARTING_LIVES;
     this.gameEnded = false;
     this.canTakeDamage = true;
 
@@ -97,7 +96,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createHud(): void {
-    this.add.text(24, 18, 'HACK THE GAME', {
+    this.add.text(24, 18, 'HACK THE GAME — CORREGIDO', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '20px',
       color: COLORS.text,
